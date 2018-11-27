@@ -67,9 +67,6 @@ class HomeController extends AbstractController
                 $html = $response->getBody();
                 $crawler = new Crawler((string) $html);
 
-
-
-
                 if($key == "sarenza"){
 
                     $titleElement = $crawler->filter('.mighty.brand')->first();
@@ -119,7 +116,7 @@ class HomeController extends AbstractController
             $repoProduct = $this->getDoctrine()->getRepository(Product::class);
             $res = $repoProduct->findByString($productName);
         }
-
+        
         return $this->render('home/home.html.twig', [
 
             "formModelProduct" => $formModelProduct->createView(),
