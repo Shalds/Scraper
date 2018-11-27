@@ -1,0 +1,15 @@
+#block_formModelProduct{
+    display: flex;
+    margin: 20px 0px;
+    justify-content: center;
+}
+
+#ModelProduct{
+    width: 200px;
+}
+
+#ModelProduct label {
+    font-weight: bold;
+    margin-bottom: 7px;
+    font-family: "proxima-nova", "Source Sans Pro", sans-serif;
+}

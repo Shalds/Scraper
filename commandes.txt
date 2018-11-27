@@ -1,0 +1,12 @@
+cd /xampp/htdocs
+
+composer create-project symfony/skeleton scraper
+
+cd scraper
+
+composer req make
+composer req guzzlehttp/guzzle
+composer req symfony/dom-crawler
+composer req orm
+composer req symfony/var-dumper
+composer req symfony/css-selector

@@ -1,0 +1,23 @@
+{% extends 'layout.html.twig' %}
+
+{% block body %}
+<div>
+    <title></title>
+</div>
+    <div id="block_formModelProduct">
+        {{ form_start(formModelProduct) }}
+        {{ form_widget(formModelProduct) }}
+        <button class="btn btn-success"> Rechercher</button>
+        {{ form_end(formModelProduct) }}
+    </div>
+
+
+    {% if(res != null) %}
+        {% for product in res %}
+            <p>{{ product.name }}</p>
+        {% endfor %}
+    {% endif %}
+
+
+
+{% endblock body %}
