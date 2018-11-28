@@ -1,3 +1,13 @@
+a{
+
+    color: white;
+}
+
+a:hover{
+    color: white;
+    text-decoration: none;
+}
+
 #block_formModelProduct{
     display: flex;
     margin: 20px 0px;
@@ -13,3 +23,20 @@
     margin-bottom: 7px;
     font-family: "proxima-nova", "Source Sans Pro", sans-serif;
 }
+
+.title_name_model{
+    font-size: 13pt;
+    font-weight: bold;
+}
+
+.block_product{
+    width: 22%;
+}
+
+.block_product_only{
+    border: rgba(0, 0, 0, 0.31) solid 1px;
+    border-radius: 10px;
+    margin: 15px 0px;
+    padding: 10px 0px 10px 20px;
+}
+

@@ -7,9 +7,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\ModelProductRepository")
+ * @ORM\Entity(repositoryClass="App\Repository\SiteRepository")
  */
-class ModelProduct
+class Site
 {
     /**
      * @ORM\Id()
@@ -19,12 +19,17 @@ class ModelProduct
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=150)
+     * @ORM\Column(type="string", length=100)
      */
     private $name;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Product", mappedBy="model", orphanRemoval=true)
+     * @ORM\Column(type="string", length=100)
+     */
+    private $baseUrl;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Product", mappedBy="Site", orphanRemoval=true)
      */
     private $products;
 
@@ -50,6 +55,18 @@ class ModelProduct
         return $this;
     }
 
+    public function getBaseUrl(): ?string
+    {
+        return $this->baseUrl;
+    }
+
+    public function setBaseUrl(string $baseUrl): self
+    {
+        $this->baseUrl = $baseUrl;
+
+        return $this;
+    }
+
     /**
      * @return Collection|Product[]
      */
@@ -62,7 +79,7 @@ class ModelProduct
     {
         if (!$this->products->contains($product)) {
             $this->products[] = $product;
-            $product->setModel($this);
+            $product->setSite($this);
         }
 
         return $this;
@@ -73,8 +90,8 @@ class ModelProduct
         if ($this->products->contains($product)) {
             $this->products->removeElement($product);
             // set the owning side to null (unless already changed)
-            if ($product->getModel() === $this) {
-                $product->setModel(null);
+            if ($product->getSite() === $this) {
+                $product->setSite(null);
             }
         }
 

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\ModelProduct;
 use App\Entity\Product;
+use App\Entity\Site;
 use App\Form\ModelProductType;
 use GuzzleHttp\Client;
 use GuzzleHttp\Cookie\SetCookie;
@@ -19,22 +20,24 @@ class HomeController extends AbstractController
      */
     public function home(Request $request)
     {
-        $res ="";
+        $res = "";
 
         $modelProduct = new ModelProduct();
 
         $formModelProduct = $this->createForm(ModelProductType::class, $modelProduct);
 
-        $mprepo = $this->getDoctrine()->getRepository(ModelProduct::class);
+        $mpRepo = $this->getDoctrine()->getRepository(ModelProduct::class);
+        $siteRepo = $this->getDoctrine()->getRepository(Site::class);
 
 
-        if($request->get('model_product') != null){
+        if ($request->get('model_product') != null) {
             $productNameTab = $request->get('model_product');
 
-            $productName = $mprepo->find($productNameTab['name'])->getName();
+            $productNameR = $mpRepo->find($productNameTab['name']);
+            $productName = $productNameR->getName();
 
-        //web socket ratchet
-        //https://github.com/ratchetphp/Ratchet
+            //web socket ratchet
+            //https://github.com/ratchetphp/Ratchet
             $client = new Client(array(
                 'timeout' => 50,
                 'verify' => false,
@@ -54,43 +57,74 @@ class HomeController extends AbstractController
 
             $cxContext = stream_context_create($aContext);
 
-            $urlSarenza = "https://www.sarenza.com/adidas-originals-".$productName."-mp";
+            $urlSarenza = "https://www.sarenza.com/adidas-originals-" . $productName . "-mp";
 
-            $urlZalando = "https://www.zalando.fr/".$productName."/";
+            $urlZalando = "https://www.zalando.fr/" . $productName . "/";
 
             $tabUrl = ["sarenza" => $urlSarenza, "zalando" => $urlZalando];
             $em = $this->getDoctrine()->getManager();
 
-            foreach ($tabUrl as $key => $item){
+            $siteRepo = $this->getDoctrine()->getRepository(Site::class);
+
+            foreach ($tabUrl as $key => $item) {
 
                 $response = $client->get($item);
                 $html = $response->getBody();
-                $crawler = new Crawler((string) $html);
+                $crawler = new Crawler((string)$html);
 
-                if($key == "sarenza"){
+                if ($key == "sarenza") {
 
                     $titleElement = $crawler->filter('.mighty.brand')->first();
                     $title = $titleElement->text();
                     $modelElement = $crawler->filter('.model')->first();
                     $model = $modelElement->text();
-                    $prixElement = $crawler->filter('.mighty.price')->first();
-                    $prix = $prixElement->text();
+                    $prixElement = $crawler->filter('.infos .mighty.price')->first();
+                    $prixSpace = trim($prixElement->text());
+
+                    //parenthèse pour capturer le pattern
+                    preg_match('([0-9,.]+)', $prixSpace, $prix);
 
                     $urlElement = $crawler->filter('.product-link')->first();
-                    $url = $urlElement->text();
+                    $url = $urlElement->attr("href");
+
+                    //Get le siteId et modelId pour le tri par par ces deux entité.
+                    $repoProduct = $this->getDoctrine()->getRepository(Product::class);
+                    $siteR = $siteRepo->findOneBy(array("name" => $key));
+                    $productR = $repoProduct->findOneBy(array("model" => $productNameR, "Site" => $siteR));
+
+                    $productName = "";
+                    $productUrl = "";
+                    $productPrix = "";
+
+                    //Gestion Image
+                    $imgElement = $crawler->filter('.vignette .thumb img')->first();
+                    $imgsrc = $imgElement->attr('src');
+
+                    $nameFile = uniqid();
+                    dump($nameFile);
+
+                    file_put_contents('C:\xampp\htdocs\scraper\public\image\sarenza\stan-smith\\'.$nameFile.'', file_get_contents($imgsrc, false, $cxContext));
 
 
+                    if ($productR != null) {
+                        $productName = $productR->getName();
+                        $productUrl = $productR->getUrl();
+                        $productPrix = $productR->getPriceFinal();
+                    }
 
-                    $Product = new Product();
-                    $Product->setName($model);
-                    $Product->setPriceFinal((float)$prix);
-                    $Product->setUrl($url);
+                    //pas d'inscription dans la base de donné si les données correspondent
+                    if ($productR == null OR $productName != $model && $productUrl != $url && $productPrix != (float)$prix[0]) {
+                        $Product = new Product();
+                        $Product->setName($model);
+                        $Product->setPriceFinal((float)$prix[0]);
+                        $Product->setUrl($url);
+                        $Product->setModel($mpRepo->find($productNameTab['name']));
+                        $Product->setSite($siteR);
+                        $Product->setDateChange(new \DateTime());
 
-
-                    $em->persist($Product);
-                    $em->flush();
-
-                } elseif ($key == "zalando"){
+                        $em->persist($Product);
+                    }
+                } elseif ($key == "zalando") {
 
                     $titleElement = $crawler->filter('.catalogArticlesList_brandName')->first();
                     $title = $titleElement->text();
@@ -98,27 +132,50 @@ class HomeController extends AbstractController
                     $modelElement = $crawler->filter('.catalogArticlesList_articleName')->first();
                     $model = $modelElement->text();
 
-                    $prixElement = $crawler->filter('.catalogArticlesList_price ')->first();
-                    $prix = $prixElement->text();
+                    $prixElement = $crawler->filter('.catalogArticlesList_price.specialPrice')->first();
+                    $prixSpace = trim($prixElement->text());
+                    preg_match('([0-9,.]+)', $prixSpace, $prix);
 
                     $urlElement = $crawler->filter('.catalogArticlesList_infoContent a')->first();
-                    $url = $urlElement->text();
+                    $url = $urlElement->attr("href");
 
-                    $Product = new Product();
-                    $Product->setName($model);
-                    $Product->setPriceFinal((float)$prix);
-                    $Product->setUrl($url);
-                    $em->persist($Product);
-                    $em->flush();
+                    //Get le siteId et modelId pour le tri par par ces deux entité.
+                    $repoProduct = $this->getDoctrine()->getRepository(Product::class);
+                    $siteR = $siteRepo->findOneBy(array("name" => $key));
+                    $productR = $repoProduct->findOneBy(array("model" => $productNameR, "Site" => $siteR));
+
+                    $productName = "";
+                    $productUrl = "";
+                    $productPrix = "";
+
+
+                    if($productR != null){
+                        $productName = $productR->getName();
+                        $productUrl = $productR->getUrl();
+                        $productPrix = $productR->getPriceFinal();
+                    }
+
+                    if ($productR == null OR $productName != $model && $productUrl != $url && $productPrix != (float)$prix[0]) {
+
+                        //pas d'inscription dans la base de donné si les données correspondent
+                        $Product = new Product();
+                        $Product->setName($model);
+                        $Product->setPriceFinal((float)$prix[0]);
+                        $Product->setUrl($url);
+                        $Product->setModel($mpRepo->find($productNameTab['name']));
+                        $Product->setSite($siteR);
+                        $Product->setDateChange(new \DateTime());
+
+                        $em->persist($Product);
+
+                    }
                 }
+                $em->flush();
             }
-
-            $repoProduct = $this->getDoctrine()->getRepository(Product::class);
-            $res = $repoProduct->findByString($productName);
+            $res = $repoProduct->findBy(array('model' => $productNameTab['name']));
         }
-        
-        return $this->render('home/home.html.twig', [
 
+        return $this->render('home/home.html.twig', [
             "formModelProduct" => $formModelProduct->createView(),
             "res" => $res
         ]);

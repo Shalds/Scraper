@@ -11,12 +11,19 @@
         {{ form_end(formModelProduct) }}
     </div>
 
-
-    {% if(res != null) %}
+    <div class="block_product">
+    {% if res != null %}
         {% for product in res %}
-            <p>{{ product.name }}</p>
+            <div class="block_product_only">
+                <h3>{{ product.site.name }}</h3>
+                <p class="title_name_model">{{ product.name }}</p>
+                <p><strong>Prix : </strong>{{ product.priceFinal }} €
+                <p><button class="btn btn-success"><a href="{{ product.site.baseUrl }}{{ product.url }}" target="_blank"> J'y vais !</a></button></p>
+            </div>
+
         {% endfor %}
     {% endif %}
+    </div>
 
 
 

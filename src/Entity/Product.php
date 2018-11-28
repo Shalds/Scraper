@@ -41,6 +41,23 @@ class Product
      */
     private $url;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\ModelProduct", inversedBy="products")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $model;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Site", inversedBy="products")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $Site;
+
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $dateChange;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -102,6 +119,42 @@ class Product
     public function setUrl(string $url): self
     {
         $this->url = $url;
+
+        return $this;
+    }
+
+    public function getModel(): ?ModelProduct
+    {
+        return $this->model;
+    }
+
+    public function setModel(?ModelProduct $model): self
+    {
+        $this->model = $model;
+
+        return $this;
+    }
+
+    public function getSite(): ?Site
+    {
+        return $this->Site;
+    }
+
+    public function setSite(?Site $Site): self
+    {
+        $this->Site = $Site;
+
+        return $this;
+    }
+
+    public function getDateChange(): ?\DateTimeInterface
+    {
+        return $this->dateChange;
+    }
+
+    public function setDateChange(\DateTimeInterface $dateChange): self
+    {
+        $this->dateChange = $dateChange;
 
         return $this;
     }

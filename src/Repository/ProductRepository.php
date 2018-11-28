@@ -20,16 +20,17 @@ class ProductRepository extends ServiceEntityRepository
     }
 
 
-    public function findByString($keyword)
+    public function findByModelSite(ModelProduct $modelProduct, Site $site)
     {
 
-        $qb = $this->createQueryBuilder('w');
+        $qb = $this->createQueryBuilder('p');
 
-        $qb->andWhere("w.name LIKE :kw");
-        $qb->setParameter('kw', '%' . $keyword . '%');
-
+        $qb->select('p');
+        $qb->andWhere("p.name LIKE :kp");
+        $qb->setParameter('kp', $modelProduct);
         $query = $qb->getQuery();
         $product = $query->getResult();
+
         return [
         "product" => $product
         ];
